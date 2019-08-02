@@ -70,8 +70,6 @@ class RemotePlatform(MycroftSkill):
 
         try:
             # Handle the 'waking' visual
-            self.add_event('recognizer_loop:record_begin',
-                           self.handle_listener_started)
             self.add_event('recognizer_loop:record_end',
                            self.handle_listener_ended)
             self.add_event('mycroft.speech.recognition.unknown',
