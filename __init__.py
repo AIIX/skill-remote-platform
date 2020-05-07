@@ -135,9 +135,14 @@ class RemotePlatform(MycroftSkill):
     ###################################################################
     # Idle screen mechanism
 
+    @intent_file_handler('homescreen.intent')
+    def call_home_from_voc(self):
+        self.log.debug("back button pressed")
+        self.force_idle_screen()
+        
     def show_home_screen(self):
         self.log.debug("back button pressed")
-        self.show_idle_screen()
+        self.force_idle_screen()
 
     def save_resting_screen(self):
         """ Handler to be called if the settings are changed by
@@ -334,6 +339,11 @@ class RemotePlatform(MycroftSkill):
             self.log.debug('Showing Idle screen for '
                            '{}'.format(self.gui['selected']))
             screen = self.idle_screens.get(self.gui['selected'])
+        if screen:
+            self.bus.emit(Message('{}.idle'.format(screen)))
+            
+    def force_idle_screen(self):
+        screen = self.idle_screens.get(self.gui['selected'])
         if screen:
             self.bus.emit(Message('{}.idle'.format(screen)))
 
