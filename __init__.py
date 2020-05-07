@@ -67,8 +67,12 @@ class RemotePlatform(MycroftSkill):
         # Preselect Time and Date as resting screen
         self.gui['selected'] = self.settings.get('selected', 'Time and Date')
         self.gui.set_on_gui_changed(self.save_resting_screen)
+        self.gui.register_handler('mycroft.gui.screen.close', self.show_home_screen)
+        self.add_event('mycroft.gui.screen.close', self.show_home_screen)
+        self.bus.on('mycroft.gui.screen.close', self.show_home_screen)
 
         try:
+            #self.gui.register_handler('mycroft.gui.screen.close', self.show_home_screen)
             # Handle the 'waking' visual
             self.add_event('recognizer_loop:record_end',
                            self.handle_listener_ended)
@@ -130,6 +134,10 @@ class RemotePlatform(MycroftSkill):
 
     ###################################################################
     # Idle screen mechanism
+
+    def show_home_screen(self):
+        self.log.debug("back button pressed")
+        self.show_idle_screen()
 
     def save_resting_screen(self):
         """ Handler to be called if the settings are changed by
