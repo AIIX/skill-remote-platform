@@ -55,6 +55,7 @@ class RemotePlatform(MycroftSkill):
 
         self.skill_setting_obj = {}
         self.skill_setting_list = []
+        self.forced_back = False
 
     def initialize(self):
         """ Perform initalization.
@@ -67,9 +68,10 @@ class RemotePlatform(MycroftSkill):
         # Preselect Time and Date as resting screen
         self.gui['selected'] = self.settings.get('selected', 'Time and Date')
         self.gui.set_on_gui_changed(self.save_resting_screen)
-        self.gui.register_handler('mycroft.gui.screen.close', self.show_home_screen)
-        self.add_event('mycroft.gui.screen.close', self.show_home_screen)
-        self.bus.on('mycroft.gui.screen.close', self.show_home_screen)
+        self.gui.register_handler('mycroft.gui.screen.close', self.force_idle_screen)
+        self.add_event('mycroft.gui.screen.close', self.force_idle_screen)
+        self.bus.on('mycroft.gui.screen.close', self.force_idle_screen)
+        self.add_event('mycroft.gui.forceHome', self.force_home)
 
         try:
             #self.gui.register_handler('mycroft.gui.screen.close', self.show_home_screen)
@@ -134,14 +136,20 @@ class RemotePlatform(MycroftSkill):
 
     ###################################################################
     # Idle screen mechanism
+    def force_home(self, message):
+        screen = self.idle_screens.get(self.gui['selected'])
+        if screen:
+            self.bus.emit(Message('{}.idle'.format(screen)))
 
     @intent_file_handler('homescreen.intent')
     def call_home_from_voc(self):
         self.log.debug("back button pressed")
         self.force_idle_screen()
-        
+
     def show_home_screen(self):
         self.log.debug("back button pressed")
+        self.gui.clear()
+        self.enclosure.display_manager.remove_active()
         self.force_idle_screen()
 
     def save_resting_screen(self):
@@ -330,7 +338,7 @@ class RemotePlatform(MycroftSkill):
         """
         self.log.debug('Showing idle screen')
         screen = None
-        if self.override_idle:
+        if self.override_idle and not self.forced_back:
             self.log.debug('Returning to override idle screen')
             # Restore the page overriding idle instead of the normal idle
             self.bus.emit(self.override_idle[0])
@@ -341,11 +349,20 @@ class RemotePlatform(MycroftSkill):
             screen = self.idle_screens.get(self.gui['selected'])
         if screen:
             self.bus.emit(Message('{}.idle'.format(screen)))
-            
-    def force_idle_screen(self):
-        screen = self.idle_screens.get(self.gui['selected'])
-        if screen:
-            self.bus.emit(Message('{}.idle'.format(screen)))
+        elif self.override_idle and self.forced_back:
+            screen = self.idle_screens.get(self.gui['selected'])
+            if screen:
+                self.bus.emit(Message('{}.idle'.format(screen)))
+                self.forced_back = False
+
+    def force_idle_screen(self, _=None):
+        #if (self.override_idle and time.monotonic() - self.override_idle[1] > 2):
+        #    self.override_idle = None
+        #    self.show_idle_screen()
+        #else:
+        LOG.info("I am here")
+        self.forced_back = True
+        self.show_idle_screen()
 
     def handle_listener_ended(self, message):
         """ When listening has ended show the thinking animation. """
