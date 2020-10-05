@@ -66,7 +66,7 @@ class RemotePlatform(MycroftSkill):
         self.gui['viseme'] = {'start': 0, 'visemes': []}
 
         # Preselect Time and Date as resting screen
-        self.gui['selected'] = self.settings.get('selected', 'Time and Date')
+        self.gui['selected'] = self.settings.get('selected', 'AndroidHomescreen')
         self.gui.set_on_gui_changed(self.save_resting_screen)
         self.gui.register_handler('mycroft.gui.screen.close', self.force_idle_screen)
         self.add_event('mycroft.gui.screen.close', self.force_idle_screen)
